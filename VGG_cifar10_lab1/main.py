@@ -11,9 +11,9 @@ import torchvision.transforms as transforms
 import os
 import argparse
 import math
-import matplotlib.pyplot as plt
-
-from DNN_Lab1.VGG_cifar10_lab1.models import *
+# import matplotlib.pyplot as plt
+# DNN_Lab1.VGG_cifar10_lab1.
+from models import *
 
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
@@ -85,7 +85,6 @@ def train(epoch):
     correct = 0
     total = 0
     epoch_loss = 0.0
-    epoch_correct = 0
 
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.to(device), targets.to(device)
@@ -100,16 +99,14 @@ def train(epoch):
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
 
-
         print(f"Epoch {epoch:03d} [{batch_idx+1:>4}/{len(trainloader)}] |"
                         f"lr={optimizer.param_groups[0]['lr']:.4g} | "
                         f"train_loss={train_loss:.4f} | train_acc={100.*correct/total:.3f}",
                         flush=True)
 
         epoch_loss += outputs.shape[0] * loss.item()
-        total_correct += correct
         
-    return epoch_loss, epoch_correct
+    return epoch_loss, correct
 
 def test(epoch):
     global best_acc
@@ -152,19 +149,13 @@ def test(epoch):
 
 all_loss = []
 all_acc = []
-for epoch in range(start_epoch, start_epoch+1):
+for epoch in range(start_epoch, start_epoch+100):
     epoch_loss, epoch_correct = train(epoch)
     all_loss.append(epoch_loss/len(trainset))
-    all_acc.append(100.*epoch_correct/len(trainset))
+    # print(epoch_correct, total, len(trainset), trainloader.batch_size)
+    all_acc.append((epoch_correct/len(trainset))*100)
     test(epoch)
     scheduler.step()
 
-plt.plot(all_loss)
-plt.ylabel('loss')
-plt.xlabel('epoch')
-plt.show()
-
-plt.plot(all_acc)
-plt.ylabel('accuracy')
-plt.xlabel('epoch')
-plt.show()
+print(all_loss)
+print(all_acc)
