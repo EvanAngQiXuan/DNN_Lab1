@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --partition=digitallabshort
 #SBATCH --nodes=1
-#SBATCH --gres=gpu:a100:1
-#SBATCH --mem=2GB
+#SBATCH --gres=gpu:1
+#SBATCH --mem=8GB
 #SBATCH --time=01:00:00
 
 # start environments and load existing modules

@@ -1,4 +1,5 @@
 from .vgg import *
+from .my_dnn import My_DNN
 # from .dpn import *
 # from .lenet import *
 # from .senet import *

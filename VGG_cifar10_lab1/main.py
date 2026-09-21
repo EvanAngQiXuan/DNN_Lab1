@@ -56,7 +56,7 @@ classes = ('plane', 'car', 'bird', 'cat', 'deer',
 
 # Model
 print('==> Building model..')
-net = VGG('VGG16')
+net = VGG("VGG16")
 net = net.to(device)
 if device == 'cuda':
     net = torch.nn.DataParallel(net)
@@ -101,7 +101,7 @@ def train(epoch):
 
         print(f"Epoch {epoch:03d} [{batch_idx+1:>4}/{len(trainloader)}] |"
                         f"lr={optimizer.param_groups[0]['lr']:.4g} | "
-                        f"train_loss={train_loss:.4f} | train_acc={100.*correct/total:.3f}",
+                        f"train_loss={train_loss/(batch_idx+1):.4f} | train_acc={100.*correct/total:.3f}",
                         flush=True)
 
         epoch_loss += outputs.shape[0] * loss.item()
@@ -128,7 +128,7 @@ def test(epoch):
 
             print(f"Epoch {epoch:03d} |"
                             f"lr={optimizer.param_groups[0]['lr']:.4g} | "
-                            f"test_loss={test_loss:.4f} | test_acc={100.*correct/total:.3f}",
+                            f"test_loss={test_loss/(batch_idx+1):.4f} | test_acc={100.*correct/total:.3f}",
                             flush=True)
 
 
