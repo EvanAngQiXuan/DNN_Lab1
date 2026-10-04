@@ -7,18 +7,18 @@ class OpticDiscSegmenter(nn.Module):
         super(OpticDiscSegmenter, self).__init__()
         
         # --- ENCODER (4 Trainable Layers) ---
-        self.enc1 = nn.Conv2d(3, 32, kernel_size=3, padding=1)    # Layer 1
-        self.enc2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)   # Layer 2
-        self.enc3 = nn.Conv2d(64, 128, kernel_size=3, padding=1)  # Layer 3
-        self.enc4 = nn.Conv2d(128, 256, kernel_size=3, padding=1) # Layer 4
+        self.enc1 = nn.Conv2d(3, 32, kernel_size=3, padding=1)
+        self.enc2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
+        self.enc3 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
+        self.enc4 = nn.Conv2d(128, 256, kernel_size=3, padding=1)
         
         self.pool = nn.MaxPool2d(2, 2)
         
         # --- DECODER (4 Trainable Layers) ---
-        self.dec1 = nn.Conv2d(256 + 128, 128, kernel_size=3, padding=1) # Layer 5
-        self.dec2 = nn.Conv2d(128 + 64, 64, kernel_size=3, padding=1)   # Layer 6
-        self.dec3 = nn.Conv2d(64 + 32, 32, kernel_size=3, padding=1)    # Layer 7
-        self.dec4 = nn.Conv2d(32, 1, kernel_size=1)                     # Layer 8 (Output)
+        self.dec1 = nn.Conv2d(256 + 128, 128, kernel_size=3, padding=1) 
+        self.dec2 = nn.Conv2d(128 + 64, 64, kernel_size=3, padding=1)
+        self.dec3 = nn.Conv2d(64 + 32, 32, kernel_size=3, padding=1)
+        self.dec4 = nn.Conv2d(32, 1, kernel_size=1)
 
     def forward(self, x):
         # Encoder
