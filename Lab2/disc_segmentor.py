@@ -31,11 +31,10 @@ class OpticDiscSegmenter(nn.Module):
         e3 = F.relu(self.enc3(p2))
         p3 = self.pool(e3)
         
-        e4 = F.relu(self.enc4(p3))
-        p4 = self.pool(e4)
-        
+        e4 = F.relu(self.enc4(p3))  # bottleneck at 1/8 resolution (no 4th pool, so skips line up)
+
         # Decoder with Skip Connections (Bilinear Interpolation + Concat)
-        d1 = F.interpolate(p4, scale_factor=2, mode='bilinear', align_corners=False)
+        d1 = F.interpolate(e4, scale_factor=2, mode='bilinear', align_corners=False)
         d1 = torch.cat([d1, e3], dim=1)
         d1 = F.relu(self.dec1(d1))
         
@@ -47,7 +46,6 @@ class OpticDiscSegmenter(nn.Module):
         d3 = torch.cat([d3, e1], dim=1)
         d3 = F.relu(self.dec3(d3))
         
-        d4 = F.interpolate(d3, scale_factor=2, mode='bilinear', align_corners=False)
-        out = self.dec4(d4)  # Logits output (use BCEWithLogitsLoss or combined loss)
+        out = self.dec4(d3)  # Logits output at full resolution (use BCEWithLogitsLoss or combined loss)
         
         return out

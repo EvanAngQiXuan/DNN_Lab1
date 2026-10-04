@@ -37,10 +37,17 @@ def load_mat_coordinates(mat_path):
     Extracts raw array data from .mat file.
     """
     mat = sio.loadmat(mat_path)
+    # MESSIDOR GT stores the 4 disc extrema as separate 'x' and 'y' variables;
+    # combine them into a (4, 2) array of (x, y) points.
+    if 'x' in mat and 'y' in mat:
+        x = np.array(mat['x'], dtype=np.float32).ravel()
+        y = np.array(mat['y'], dtype=np.float32).ravel()
+        return np.stack([x, y], axis=1)
+
     keys = [k for k in mat.keys() if not k.startswith('__')]
     if not keys:
         raise ValueError(f"No valid data array found in {mat_path}")
-    
+
     data = mat[keys[0]]
     arr = np.array(data, dtype=np.float32).squeeze()
     return arr
@@ -86,15 +93,10 @@ def get_mask_from_gt(img_shape, gt_data, target_size=(560, 368)):
 
     # 8-element / 4x2 matrix format
     if gt_data.size == 8:
+        # (4, 2) array of (x, y) points, as returned by load_mat_coordinates
         points = gt_data.reshape((4, 2))
-        
-        # Check if column 0 is X or Y
-        if np.max(points[:, 0]) > orig_h:
-            x_coords = points[:, 0] * scale_x
-            y_coords = points[:, 1] * scale_y
-        else:
-            x_coords = points[:, 1] * scale_x
-            y_coords = points[:, 0] * scale_y
+        x_coords = points[:, 0] * scale_x
+        y_coords = points[:, 1] * scale_y
 
         center_x = int(np.mean(x_coords))
         center_y = int(np.mean(y_coords))
@@ -165,6 +167,9 @@ def main():
 
             img_resized = cv2.resize(img, TARGET_SIZE, interpolation=cv2.INTER_AREA)
             mask_resized = get_mask_from_gt(img.shape, gt_data, target_size=TARGET_SIZE)
+            if (mask_resized > 0).sum() < 500:
+                raise RuntimeError(f"Suspiciously small/empty mask ({(mask_resized > 0).sum()} px) "
+                                   f"for {mat_path}, GT data: {gt_data.tolist()}")
 
             base_filename = os.path.splitext(os.path.basename(img_path))[0]
             out_img_path = os.path.join(img_out_dir, f"{base_filename}.png")
