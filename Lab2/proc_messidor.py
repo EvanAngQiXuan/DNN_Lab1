@@ -109,6 +109,16 @@ def get_mask_from_gt(img_shape, gt_data, target_size=(560, 368)):
 
     raise ValueError(f"Unrecognized GT array size: {gt_data.size}")
 
+def create_boundary_overlay(image_rgb, mask, contour_color=(255, 0, 0), thickness=2):
+    """
+    Draws the optic disc boundary contour on top of the original fundus image.
+    """
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    overlay = image_rgb.copy()
+    cv2.drawContours(overlay, contours, -1, contour_color, thickness)
+    
+    return overlay
+
 def main():
     image_paths = sorted(
         glob.glob(os.path.join(image_dir, "*.tif")) + 
@@ -148,8 +158,10 @@ def main():
     for split_name, pairs in splits.items():
         img_out_dir = os.path.join(OUTPUT_DIR, split_name, "images")
         mask_out_dir = os.path.join(OUTPUT_DIR, split_name, "masks")
+        overlay_out_dir = os.path.join(OUTPUT_DIR, split_name, "overlays")
         os.makedirs(img_out_dir, exist_ok=True)
         os.makedirs(mask_out_dir, exist_ok=True)
+        os.makedirs(overlay_out_dir, exist_ok=True)
 
         print(f"\nProcessing '{split_name}' set...")
         for img_path, mat_path in tqdm(pairs):
@@ -160,7 +172,6 @@ def main():
 
             try:
                 gt_data = load_mat_coordinates(mat_path)
-                mask = get_mask_from_gt(img.shape, gt_data)
             except Exception as e:
                 print(f"[Error] Failed processing {mat_path}: {e}")
                 continue
@@ -171,12 +182,18 @@ def main():
                 raise RuntimeError(f"Suspiciously small/empty mask ({(mask_resized > 0).sum()} px) "
                                    f"for {mat_path}, GT data: {gt_data.tolist()}")
 
+            img_rgb = cv2.cvtColor(img_resized, cv2.COLOR_BGR2RGB)
+            overlay_rgb = create_boundary_overlay(img_rgb, mask_resized, contour_color=(255, 0, 0), thickness=2)
+            overlay_bgr = cv2.cvtColor(overlay_rgb, cv2.COLOR_RGB2BGR)
+
             base_filename = os.path.splitext(os.path.basename(img_path))[0]
             out_img_path = os.path.join(img_out_dir, f"{base_filename}.png")
             out_mask_path = os.path.join(mask_out_dir, f"{base_filename}_mask.png")
+            out_overlay_path = os.path.join(overlay_out_dir, f"{base_filename}_overlay.png")
 
             cv2.imwrite(out_img_path, img_resized)
             cv2.imwrite(out_mask_path, mask_resized)
+            cv2.imwrite(out_overlay_path, overlay_bgr)
 
     print(f"\nProcessing complete! Output saved to: {os.path.abspath(OUTPUT_DIR)}")
 
